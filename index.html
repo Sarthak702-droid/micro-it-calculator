@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Glassmorphism Calculator</title>
+  <style>
+    /* Background styling */
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #e0c3fc, #8ec5fc); 
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Calculator container */
+    .calculator {
+      width: 340px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: #000;
+    }
+
+    .display {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      margin-bottom: 20px;
+      padding: 15px;
+      font-size: 2rem;
+      text-align: right;
+      min-height: 50px;
+      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+      color: #000;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+      margin-right: 10px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.4);
+      transition: 0.4s;
+      border-radius: 20px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
+      background-color: #fff;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background: rgba(255, 255, 255, 0.6);
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .scientific-buttons {
+      display: none;
+      margin-top: 10px;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.3);
+      border: none;
+      border-radius: 10px;
+      padding: 15px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.6);
+      transform: translateY(-2px);
+    }
+    .operator {
+      background: rgba(0, 150, 255, 0.3);
+      color: #fff;
+    }
+    .operator:hover {
+      background: rgba(0, 150, 255, 0.6);
+    }
+    .equal {
+      background: rgba(0, 200, 100, 0.3);
+      color: #fff;
+      grid-column: span 4;
+    }
+    .equal:hover {
+      background: rgba(0, 200, 100, 0.6);
+    }
+    .clear {
+      background: rgba(255, 0, 0, 0.3);
+      color: #fff;
+    }
+    .clear:hover {
+      background: rgba(255, 0, 0, 0.6);
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <div class="display" id="display">0</div>
+
+    <div class="controls">
+      <label class="switch">
+        <input type="checkbox" id="modeToggle">
+        <span class="slider"></span>
+      </label>
+      <span>Scientific Mode</span>
+    </div>
+
+    <div class="buttons basic-buttons">
+      <button class="btn number" data-value="7">7</button>
+      <button class="btn number" data-value="8">8</button>
+      <button class="btn number" data-value="9">9</button>
+      <button class="btn operator" data-op="/">÷</button>
+
+      <button class="btn number" data-value="4">4</button>
+      <button class="btn number" data-value="5">5</button>
+      <button class="btn number" data-value="6">6</button>
+      <button class="btn operator" data-op="*">×</button>
+
+      <button class="btn number" data-value="1">1</button>
+      <button class="btn number" data-value="2">2</button>
+      <button class="btn number" data-value="3">3</button>
+      <button class="btn operator" data-op="-">−</button>
+
+      <button class="btn number" data-value="0">0</button>
+      <button class="btn number" data-value=".">.</button>
+      <button class="btn clear">C</button>
+      <button class="btn operator" data-op="+">+</button>
+
+      <button class="btn equal">=</button>
+    </div>
+
+    <div class="buttons scientific-buttons">
+      <button class="btn func" data-func="sin">sin</button>
+      <button class="btn func" data-func="cos">cos</button>
+      <button class="btn func" data-func="tan">tan</button>
+      <button class="btn func" data-func="log">log</button>
+      <button class="btn func" data-func="sqrt">√</button>
+      <button class="btn operator" data-op="^">^</button>
+    </div>
+  </div>
+
+  <script>
+    const display = document.getElementById('display');
+    const buttons = document.querySelectorAll('.btn');
+    const toggle = document.getElementById('modeToggle');
+    const sciButtons = document.querySelector('.scientific-buttons');
+
+    let currentValue = 0;
+    let operator = null;
+    let shouldReset = false;
+
+    toggle.addEventListener('change', () => {
+      if (toggle.checked) {
+        sciButtons.style.display = 'grid';
+      } else {
+        sciButtons.style.display = 'none';
+      }
+    });
+
+    function updateDisplay(text) {
+      display.textContent = text;
+    }
+
+    function clearAll() {
+      currentValue = 0;
+      operator = null;
+      shouldReset = false;
+      updateDisplay('0');
+    }
+
+    function compute(secondValue) {
+      switch (operator) {
+        case '+': currentValue += secondValue; break;
+        case '−': currentValue -= secondValue; break;
+        case '×': currentValue *= secondValue; break;
+        case '÷': currentValue /= secondValue; break;
+        case '^': currentValue = Math.pow(currentValue, secondValue); break;
+        default: return;
+      }
+      updateDisplay(String(currentValue));
+      operator = null;
+    }
+
+    buttons.forEach(button => {
+      button.addEventListener('click', () => {
+        const btnType = button.getAttribute('data-func') ? 'func' :
+                        button.getAttribute('data-op')   ? 'operator' :
+                        button.classList.contains('number') ? 'number' :
+                        button.classList.contains('clear')  ? 'clear' :
+                        button.classList.contains('equal')  ? 'equal' : '';
+
+        const value = button.textContent;
+
+        if (btnType === 'number') {
+          if (display.textContent === '0' || shouldReset) {
+            updateDisplay(value);
+            shouldReset = false;
+          } else {
+            updateDisplay(display.textContent + value);
+          }
+        } 
+        else if (btnType === 'operator') {
+          currentValue = parseFloat(display.textContent);
+          operator = value;
+          shouldReset = true;
+        }
+        else if (btnType === 'func') {
+          let x = parseFloat(display.textContent);
+          let result;
+          switch (button.getAttribute('data-func')) {
+            case 'sin': result = Math.sin(x); break;
+            case 'cos': result = Math.cos(x); break;
+            case 'tan': result = Math.tan(x); break;
+            case 'log': result = Math.log10(x); break;
+            case 'sqrt': result = Math.sqrt(x); break;
+          }
+          updateDisplay(String(result));
+          shouldReset = true;
+        }
+        else if (btnType === 'equal') {
+          let secondValue = parseFloat(display.textContent);
+          compute(secondValue);
+          shouldReset = true;
+        }
+        else if (btnType === 'clear') {
+          clearAll();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
